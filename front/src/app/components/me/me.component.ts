@@ -21,6 +21,7 @@ export class MeComponent implements OnInit {
   }
 
   public ngOnInit(): void {
+    console.log('ngOnInit called in MeComponent');
     this.userService
       .getById(this.sessionService.sessionInformation!.id.toString())
       .subscribe((user: User) => this.user = user);
@@ -39,5 +40,4 @@ export class MeComponent implements OnInit {
         this.router.navigate(['/']);
       })
   }
-
 }

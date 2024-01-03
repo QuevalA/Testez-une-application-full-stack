@@ -11,6 +11,7 @@ import { expect } from '@jest/globals';
 import { SessionService } from 'src/app/services/session.service';
 
 import { LoginComponent } from './login.component';
+import {By} from "@angular/platform-browser";
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
@@ -38,5 +39,35 @@ describe('LoginComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should initialize with a form', () => {
+    expect(component.form).toBeDefined();
+    expect(component.form.get('email')).toBeDefined();
+    expect(component.form.get('password')).toBeDefined();
+  });
+
+  it('should mark the form as invalid when initialized', () => {
+    expect(component.form.valid).toBe(false);
+  });
+
+  it('should mark the form as valid when valid values are entered', () => {
+    component.form.setValue({ email: 'test@example.com', password: 'password123' });
+    expect(component.form.valid).toBe(true);
+  });
+
+  it('should mark the form as invalid when invalid values are entered', () => {
+    component.form.setValue({ email: 'invalid-email', password: '12' });
+    expect(component.form.valid).toBe(false);
+  });
+
+  it('should not display error message when form is submitted with valid values', () => {
+    component.form.setValue({ email: 'test@example.com', password: 'password123' });
+
+    component.submit();
+    fixture.detectChanges();
+
+    const errorMessage = fixture.debugElement.query(By.css('.error'));
+    expect(errorMessage).toBeNull();
   });
 });

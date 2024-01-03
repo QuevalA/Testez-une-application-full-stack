@@ -9,6 +9,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { expect } from '@jest/globals';
 
 import { RegisterComponent } from './register.component';
+import {By} from "@angular/platform-browser";
 
 describe('RegisterComponent', () => {
   let component: RegisterComponent;
@@ -20,7 +21,7 @@ describe('RegisterComponent', () => {
       imports: [
         BrowserAnimationsModule,
         HttpClientModule,
-        ReactiveFormsModule,  
+        ReactiveFormsModule,
         MatCardModule,
         MatFormFieldModule,
         MatIconModule,
@@ -36,5 +37,25 @@ describe('RegisterComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should disable submit button when form is invalid', () => {
+    component.form.setValue({
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john.doe@example.com',
+      password: 'pass',
+    });
+
+    fixture.detectChanges();
+
+    const submitButton = fixture.debugElement.query(By.css('button')).nativeElement;
+    expect(submitButton.disabled).toBe(false);
+
+    // Modify form to make it invalid
+    component.form.controls['password'].setValue(''); // Make password empty
+    fixture.detectChanges();
+
+    expect(submitButton.disabled).toBe(true);
   });
 });

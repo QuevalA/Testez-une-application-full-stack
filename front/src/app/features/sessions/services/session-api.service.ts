@@ -40,5 +40,4 @@ export class SessionApiService {
   public unParticipate(id: string, userId: string): Observable<void> {
     return this.httpClient.delete<void>(`${this.pathService}/${id}/participate/${userId}`);
   }
-
 }

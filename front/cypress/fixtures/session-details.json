@@ -1,0 +1,12 @@
+{
+  "id": 2,
+  "name": "Session fixture #1",
+  "date": "2024-01-03T00:00:00.000+00:00",
+  "teacher_id": 1,
+  "description": "LOREM Ipsum dolor sit amet. qdqf 587544 qsdq 78877834 dsfssqc !",
+  "users": [
+    2
+  ],
+  "createdAt": "2023-12-21T10:42:18",
+  "updatedAt": "2023-12-21T10:42:18"
+}

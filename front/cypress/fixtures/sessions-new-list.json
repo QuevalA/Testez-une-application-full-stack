@@ -1,0 +1,44 @@
+[
+  {
+    "id": 2,
+    "name": "Session fixture #1",
+    "date": "2024-01-03T00:00:00.000+00:00",
+    "teacher_id": 1,
+    "description": "LOREM Ipsum dolor sit amet. qdqf 587544 qsdq 78877834 dsfssqc !",
+    "users": [
+      2
+    ],
+    "createdAt": "2023-12-21T10:42:18",
+    "updatedAt": "2023-12-21T10:42:18"
+  },
+  {
+    "id": 3,
+    "name": "Session fixture #2",
+    "date": "2024-01-08T00:00:00.000+00:00",
+    "teacher_id": 1,
+    "description": "sdgsgs57425 sdfdssdszr hrf5345 ?",
+    "users": [],
+    "createdAt": "2023-12-21T11:36:37",
+    "updatedAt": "2023-12-21T11:36:37"
+  },
+  {
+    "id": 4,
+    "name": "Session fixture #3",
+    "date": "2024-01-09T00:00:00.000+00:00",
+    "teacher_id": 2,
+    "description": "742 sfsfsfsl:j,s sdsdsd dfsf\nsfsfsf278578vcdf dssfssftut gdei45 v dfsf dsfqdzezae 254juth.",
+    "users": [],
+    "createdAt": "2024-01-04T09:41:38",
+    "updatedAt": "2024-01-04T09:41:38"
+  },
+  {
+    "id": 5,
+    "name": "Session created for testing",
+    "date": "2024-03-11T00:00:00.000+00:00",
+    "teacher_id": 1,
+    "description": "Maecenas tincidunt convallis odio, ac eleifend risus fringilla vitae. Nulla facilisi. Proin elementum erat libero, lacinia vulputate lectus pulvinar non. Sed faucibus lectus aliquet rhoncus aliquet. Integer nisl turpis, semper in eros in, condimentum efficitur elit. Suspendisse a imperdiet lacus.",
+    "users": [],
+    "createdAt": "2024-01-04T18:00:25",
+    "updatedAt": "2024-01-04T18:00:25"
+  }
+]

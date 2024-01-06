@@ -42,43 +42,60 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
-// front/cypress/support/commands.js
-
 /// <reference types="cypress" />
 
 declare global {
   namespace Cypress {
     interface Chainable {
-      login(): Chainable<void>;
+      login(isAdmin?: boolean): Chainable<void>;
     }
   }
 }
+
 export {};
 
-Cypress.Commands.add('login', () => {
-  cy.visit('/login');
-
+Cypress.Commands.add('login', (isAdmin = true) => {
+  // Intercept the POST request for login
   cy.intercept('POST', '/api/auth/login', {
     body: {
       id: 1,
       username: 'userName',
       firstName: 'firstName',
       lastName: 'lastName',
-      admin: true
+      admin: isAdmin,
     },
-  });
+  }).as('postLogin');
 
+  // Intercept the GET request for the session list
   cy.intercept(
     {
       method: 'GET',
       url: '/api/session',
     },
-    []).as('session')
+    {
+      fixture: 'sessions.json',
+    }
+  ).as('getSession');
 
+  // Start from the home page
+  cy.visit('/');
+
+  // Click on Login
+  cy.contains('Login').click();
+
+  // Fill the login form with valid data
   cy.get('input[formControlName=email]').type('yoga@studio.com');
   cy.get('input[formControlName=password]').type('test!1234');
+
   cy.get('button[type=submit]').click();
 
-  // Wait for the login request to complete
+  // Wait for both login and session requests to complete
+  cy.wait(['@postLogin', '@getSession']);
+
+  // Ensure the URL is now on the sessions page
   cy.url().should('include', '/sessions');
+
+  // Extract and use the "admin" value from the response body
+  cy.get('@postLogin').its('response.body.admin').as('isAdmin');
 });
+

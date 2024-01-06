@@ -1,0 +1,18 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+/vcs.xml
+/encodings.xml
+/Testez-une-application-full-stack.iml
+/misc.xml
+/modules.xml
+/runConfigurations/All_tests_with_coverage.xml
+/compiler.xml
+/jarRepositories.xml
+/dataSources.xml
+/inspectionProfiles/Project_Default.xml

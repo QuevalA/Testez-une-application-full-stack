@@ -13,7 +13,7 @@
 	<artifactId>yoga-app</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>yoga-app</name>
-	<description>The best backend for an Yoga app !</description>
+	<description>The best backend for a Yoga app !</description>
 
 	<properties>
 		<java.version>1.8</java.version>
@@ -110,14 +110,16 @@
                     </excludes>
                 </configuration>
             </plugin>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
+
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.8.5</version>
+				<configuration>
+					<excludes>
+						<exclude>com/openclassrooms/starterjwt/dto/**</exclude>
+					</excludes>
+				</configuration>
 				<executions>
 					<execution>
 						<goals>
@@ -153,10 +155,8 @@
 							</rules>
 						</configuration>
 					</execution>
-
 				</executions>
 			</plugin>
 		</plugins>
 	</build>
-
 </project>

@@ -4,7 +4,7 @@ import org.mockserver.integration.ClientAndServer;
 
 public class MockServerConfig {
 
-    private static ClientAndServer mockServer;
+    /*private static ClientAndServer mockServer;
 
     public static void startMockServer(int port) {
         mockServer = ClientAndServer.startClientAndServer(port);
@@ -19,5 +19,5 @@ public class MockServerConfig {
         if (mockServer != null) {
             mockServer.stop();
         }
-    }
+    }*/
 }

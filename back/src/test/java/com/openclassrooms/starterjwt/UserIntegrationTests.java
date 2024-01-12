@@ -1,40 +1,63 @@
 package com.openclassrooms.starterjwt;
 
+import com.jayway.jsonpath.JsonPath;
 import com.openclassrooms.starterjwt.models.User;
 import com.openclassrooms.starterjwt.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@DataJpaTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-public class UserIntegrationTests {
+@SpringBootTest
+@AutoConfigureMockMvc
+@TestPropertySource(locations = "classpath:test.properties")
+public class UserIntegrationTests extends BaseIntegrationTests {
+
+    @Autowired
+    private MockMvc mockMvc;
+
     @Autowired
     private UserRepository userRepository;
 
+    private String authToken;
+
+    @BeforeEach
+    public void setUp() throws Exception {
+        performLogin();
+        authToken = JsonPath.read(performLogin().andReturn().getResponse().getContentAsString(), "$.token");
+    }
+
     @Test
-    public void testUserPersistence() {
-        User user = User.builder()
-                .email("john.doe@example.com")
-                .lastName("Doe")
-                .firstName("John")
-                .password("password")
-                .admin(false)
-                .build();
+    public void testGetUserById() throws Exception {
+        // Retrieve the user to be queried
+        User userToQuery = userRepository.findById(3L).orElse(null);
+        assertNotNull(userToQuery);
 
-        User savedUser = userRepository.save(user);
+        // Perform a mock request to get user by ID
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/api/user/{id}", userToQuery.getId())
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
 
-        User retrievedUser = userRepository.findById(savedUser.getId()).orElse(null);
+        // Parse the response body and verify user details
+        String responseBody = result.getResponse().getContentAsString();
+        assertEquals(userToQuery.getId(), Long.valueOf(JsonPath.read(responseBody, "$.id").toString()));
+        assertEquals(userToQuery.getEmail(), JsonPath.read(responseBody, "$.email"));
+        assertEquals(userToQuery.getLastName(), JsonPath.read(responseBody, "$.lastName"));
+        assertEquals(userToQuery.getFirstName(), JsonPath.read(responseBody, "$.firstName"));
+        assertEquals(userToQuery.isAdmin(), JsonPath.read(responseBody, "$.admin"));
 
-        // Verify that the retrieved User matches the saved User
-        assertNotNull(retrievedUser);
-        assertEquals("john.doe@example.com", retrievedUser.getEmail());
-        assertEquals("Doe", retrievedUser.getLastName());
-        assertEquals("John", retrievedUser.getFirstName());
-        assertEquals("password", retrievedUser.getPassword());
-        assertFalse(retrievedUser.isAdmin());
+        System.out.println("[CUSTOM LOG] testGetUserById v2 works.");
     }
 }

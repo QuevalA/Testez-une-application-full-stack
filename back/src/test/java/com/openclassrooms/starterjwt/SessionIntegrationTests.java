@@ -125,7 +125,6 @@ public class SessionIntegrationTests extends BaseIntegrationTests {
 
         // Retrieve the last session entry's ID
         String lastSessionId = JsonPath.read(getAllResult.getResponse().getContentAsString(), "$[-1].id").toString();
-        System.out.println("[CUSTOM LOG] lastSessionId = " + lastSessionId);
 
         assertNotNull(lastSessionId);
 

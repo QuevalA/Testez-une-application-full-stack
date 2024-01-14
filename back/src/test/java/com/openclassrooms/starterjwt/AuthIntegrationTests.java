@@ -1,6 +1,7 @@
 package com.openclassrooms.starterjwt;
 
 import com.openclassrooms.starterjwt.models.User;
+import com.openclassrooms.starterjwt.payload.request.SignupRequest;
 import com.openclassrooms.starterjwt.repository.UserRepository;
 import com.openclassrooms.starterjwt.services.UserService;
 import org.junit.jupiter.api.AfterEach;
@@ -15,6 +16,9 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -41,10 +45,8 @@ public class AuthIntegrationTests extends BaseIntegrationTests {
 
     @Test
     public void testRegistration() throws Exception {
-        // Prepare registration request payload
         String registrationPayload = "{\"email\":\"new-user989@example.com\",\"firstName\":\"John\",\"lastName\":\"Doe\",\"password\":\"us!er-password456\"}";
 
-        // Perform a mock registration request using the mockMvc
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/register")
                         .contentType("application/json")
                         .content(registrationPayload))
@@ -56,6 +58,53 @@ public class AuthIntegrationTests extends BaseIntegrationTests {
         if (createdUser != null) {
             usersCreatedDuringTest.add(createdUser);
         }
+    }
+
+    @Test
+    public void testSignupRequestEqualsAndHashCode() {
+        SignupRequest request1 = new SignupRequest();
+        request1.setEmail("user@example.com");
+        request1.setFirstName("John");
+        request1.setLastName("Doe");
+        request1.setPassword("password123");
+
+        SignupRequest request2 = new SignupRequest();
+        request2.setEmail("user@example.com");
+        request2.setFirstName("John");
+        request2.setLastName("Doe");
+        request2.setPassword("password123");
+
+        assertEquals(request1, request2, "equals method should return true for equal objects");
+        assertEquals(request1.hashCode(), request2.hashCode(), "hashCode values should be equal for equal objects");
+    }
+
+    @Test
+    public void testSignupRequestNotEquals() {
+        SignupRequest request1 = new SignupRequest();
+        request1.setEmail("user1@example.com");
+        request1.setFirstName("John");
+        request1.setLastName("Doe");
+        request1.setPassword("password123");
+
+        SignupRequest request2 = new SignupRequest();
+        request2.setEmail("user2@example.com");
+        request2.setFirstName("Jane");
+        request2.setLastName("Smith");
+        request2.setPassword("password456");
+
+        assertNotEquals(request1, request2, "equals method should return false for non-equal objects");
+    }
+
+    @Test
+    public void testSignupRequestToString() {
+        SignupRequest request = new SignupRequest();
+        request.setEmail("user@example.com");
+        request.setFirstName("John");
+        request.setLastName("Doe");
+        request.setPassword("password123");
+
+        String expectedToString = "SignupRequest(email=user@example.com, firstName=John, lastName=Doe, password=password123)";
+        assertEquals(expectedToString, request.toString(), "toString method should return the expected string");
     }
 
     @AfterEach

@@ -1,9 +1,10 @@
 package com.openclassrooms.starterjwt;
 
 import com.jayway.jsonpath.JsonPath;
+import com.openclassrooms.starterjwt.dto.SessionDto;
+import com.openclassrooms.starterjwt.mapper.SessionMapper;
 import com.openclassrooms.starterjwt.models.Session;
 import com.openclassrooms.starterjwt.repository.SessionRepository;
-import com.openclassrooms.starterjwt.services.SessionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,11 +16,14 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -33,7 +37,7 @@ public class SessionIntegrationTests extends BaseIntegrationTests {
     private SessionRepository sessionRepository;
 
     @Autowired
-    private SessionService sessionService;
+    private SessionMapper sessionMapper;
 
     private String authToken;
 
@@ -53,7 +57,7 @@ public class SessionIntegrationTests extends BaseIntegrationTests {
                         .header("Authorization", "Bearer " + authToken)
                         .contentType("application/json")
                         .content(sessionCreationPayload))
-                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value("Session created during int. test"))
                 .andReturn();
@@ -61,18 +65,37 @@ public class SessionIntegrationTests extends BaseIntegrationTests {
         String createdSessionId = JsonPath.read(creationResult.getResponse().getContentAsString(), "$.id").toString();
 
         Session createdSession = sessionRepository.findById(Long.valueOf(createdSessionId)).orElse(null);
+
         if (createdSession != null) {
             sessionsCreatedDuringTest.add(createdSession);
         }
     }
 
     @Test
+    public void testCreateSessionWithInvalidData() throws Exception {
+        String sessionCreationPayload = "{}";
+
+                        mockMvc.perform(MockMvcRequestBuilders.post("/api/session")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType("application/json")
+                        .content(sessionCreationPayload))
+                        .andExpect(status().isBadRequest());
+    }
+
+    @Test
     public void testGetSessionById() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/api/session/4")
                         .header("Authorization", "Bearer " + authToken))
-                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(4))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value("Session test from UI #1"));
+    }
+
+    @Test
+    public void testRetrieveSessionWithInvalidId() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/session/{id}", Long.MAX_VALUE)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -90,13 +113,12 @@ public class SessionIntegrationTests extends BaseIntegrationTests {
                 "\"users\":[]" +
                 "}";
 
-        // Perform a mock session update request using the mockMvc
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.put("/api/session/{id}",
                                 sessionToUpdate.getId())
                         .header("Authorization", "Bearer " + authToken)
                         .contentType("application/json")
                         .content(sessionUpdatePayload))
-                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(sessionToUpdate.getId()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value("Updated Session Name 2"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.description")
@@ -108,19 +130,33 @@ public class SessionIntegrationTests extends BaseIntegrationTests {
     }
 
     @Test
+    public void testUpdateSessionWithInvalidData() throws Exception {
+        // Retrieve the session to be updated
+        Session sessionToUpdate = sessionRepository.findById(3L).orElse(null);
+        assertNotNull(sessionToUpdate);
+
+        String invalidSessionUpdatePayload = "{}";
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/session/{id}", sessionToUpdate.getId())
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType("application/json")
+                        .content(invalidSessionUpdatePayload))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     public void testGetAllSessions() throws Exception {
         // Perform a mock request to get all sessions
         mockMvc.perform(MockMvcRequestBuilders.get("/api/session")
                         .header("Authorization", "Bearer " + authToken))
-                .andExpect(MockMvcResultMatchers.status().isOk());
+                .andExpect(status().isOk());
     }
 
     @Test
     public void testDeleteSession() throws Exception {
-        // Perform a mock request to get all sessions
         MvcResult getAllResult = mockMvc.perform(MockMvcRequestBuilders.get("/api/session")
                         .header("Authorization", "Bearer " + authToken))
-                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(status().isOk())
                 .andReturn();
 
         // Retrieve the last session entry's ID
@@ -131,10 +167,146 @@ public class SessionIntegrationTests extends BaseIntegrationTests {
         // Perform a mock session deletion request using the mockMvc
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/session/{id}", Long.parseLong(lastSessionId))
                         .header("Authorization", "Bearer " + authToken))
-                .andExpect(MockMvcResultMatchers.status().isOk());
+                .andExpect(status().isOk());
 
         // Verify that the session has been deleted from the database
         Session deletedSession = sessionRepository.findById(Long.parseLong(lastSessionId)).orElse(null);
         assertNull(deletedSession);
+    }
+
+    @Test
+    public void testDeleteSessionWithInvalidId() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/session/{id}", Long.MAX_VALUE)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void testAddUserToSessionParticipants() throws Exception {
+        // Create a new session for testing
+        String sessionCreationPayload = "{\"name\":\"Session for adding user\",\"date\":\"2024-02-10\",\"teacher_id\":1,\"description\":\"Test session for adding user.\"}";
+        MvcResult creationResult = mockMvc.perform(MockMvcRequestBuilders.post("/api/session")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType("application/json")
+                        .content(sessionCreationPayload))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists())
+                .andReturn();
+
+        String createdSessionId = JsonPath.read(creationResult.getResponse().getContentAsString(), "$.id").toString();
+
+        // Add a user to the session participants
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/session/{sessionId}/participate/{userId}", createdSessionId, 2)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk());
+
+        // Retrieve the updated session
+        Session updatedSession = sessionRepository.findById(Long.valueOf(createdSessionId)).orElse(null);
+        assertNotNull(updatedSession);
+
+        // Verify that the user has been added to the participants list
+        assertTrue(updatedSession.getUsers().stream().anyMatch(user -> user.getId() == 2));
+
+        // Cleanup: Delete the created session
+        sessionRepository.deleteById(Long.valueOf(createdSessionId));
+    }
+
+    @Test
+    public void testRemoveUserFromSessionParticipants() throws Exception {
+        // Create a new session for testing with a user in the participants list
+        String sessionCreationPayload = "{\"name\":\"Session for removing user\",\"date\":\"2024-02-10\",\"teacher_id\":1,\"description\":\"Test session for removing user.\"}";
+        MvcResult creationResult = mockMvc.perform(MockMvcRequestBuilders.post("/api/session")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType("application/json")
+                        .content(sessionCreationPayload))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists())
+                .andReturn();
+
+        String createdSessionId = JsonPath.read(creationResult.getResponse().getContentAsString(), "$.id").toString();
+
+        // Add a user to the session participants for testing removal
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/session/{sessionId}/participate/{userId}", createdSessionId, 2)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk());
+
+        // Remove the user from the session participants
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/session/{sessionId}/participate/{userId}", createdSessionId, 2)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk());
+
+        // Retrieve the updated session
+        Session updatedSession = sessionRepository.findById(Long.valueOf(createdSessionId)).orElse(null);
+        assertNotNull(updatedSession);
+
+        // Verify that the user has been removed from the participants list
+        assertFalse(updatedSession.getUsers().stream().anyMatch(user -> user.getId() == 2));
+
+        // Cleanup: Delete the created session
+        sessionRepository.deleteById(Long.valueOf(createdSessionId));
+    }
+
+    @Test
+    public void testSessionEqualsAndHashCode() {
+        // Retrieve an existing session for testing purpose
+        Session originalSession = sessionRepository.findById(3L).orElse(null);
+        assertNotNull(originalSession);
+
+        // Duplicate the original session
+        Session duplicateSession = new Session(
+                        originalSession.getId(),
+                        originalSession.getName(),
+                        originalSession.getDate(),
+                originalSession.getDescription(),
+                originalSession.getTeacher(),
+                        originalSession.getUsers(),
+                        originalSession.getCreatedAt(),
+                        originalSession.getUpdatedAt()
+                );
+
+        // Test equals method
+        assertTrue(originalSession.equals(duplicateSession), "The equals method should return true for equal objects.");
+        assertTrue(duplicateSession.equals(originalSession), "The equals method should be symmetric.");
+
+        // Test hashCode method
+        assertEquals(originalSession.hashCode(), duplicateSession.hashCode(), "The hashCode values should be equal for equal hash code fields.");
+
+        // Request a different Session from DB
+        Session differentSession = sessionRepository.findById(4L).orElse(null);
+
+        // Test equals method for non-equal objects
+        assertFalse(originalSession.equals(differentSession), "The equals method should return false for non-equal objects.");
+        assertFalse(differentSession.equals(originalSession), "The equals method should be symmetric for non-equal objects.");
+
+        // Test hashCode method for non-equal objects
+        assertNotEquals(originalSession.hashCode(), differentSession.hashCode(), "The hashCode values should be different for non-equal objects.");
+    }
+
+    @Test
+    public void testToEntityListSessionDto() {
+        SessionDto sessionDto1 = new SessionDto();
+        sessionDto1.setId(1L);
+        sessionDto1.setName("Session1");
+        sessionDto1.setDate(new Date());
+        sessionDto1.setTeacher_id(1L);
+        sessionDto1.setDescription("Description1");
+        sessionDto1.setCreatedAt(LocalDateTime.now());
+        sessionDto1.setUpdatedAt(LocalDateTime.now());
+
+        SessionDto sessionDto2 = new SessionDto();
+        sessionDto2.setId(2L);
+        sessionDto2.setName("Session2");
+        sessionDto2.setDate(new Date());
+        sessionDto2.setTeacher_id(2L);
+        sessionDto2.setDescription("Description2");
+        sessionDto2.setCreatedAt(LocalDateTime.now());
+        sessionDto2.setUpdatedAt(LocalDateTime.now());
+
+        List<SessionDto> sessionDtoList = Arrays.asList(sessionDto1, sessionDto2);
+
+        List<Session> sessionList = sessionMapper.toEntity(sessionDtoList);
+
+        assertNotNull(sessionList);
+        assertEquals(sessionDtoList.size(), sessionList.size());
     }
 }

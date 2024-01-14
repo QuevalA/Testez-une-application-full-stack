@@ -13,7 +13,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestPropertySource(locations = "classpath:test.properties")
@@ -29,7 +28,6 @@ public abstract class BaseIntegrationTests {
     protected Environment environment;
 
     public ResultActions performLogin() throws Exception {
-        // Load credentials from properties
         String email = environment.getProperty("TEST_ADMIN_USER_EMAIL");
         String password = environment.getProperty("TEST_ADMIN_USER_PASSWORD");
 
@@ -40,10 +38,8 @@ public abstract class BaseIntegrationTests {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, password));
 
-        // Set the authentication in the SecurityContextHolder
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // Perform a mock login request using the mockMvc and return the result
         return mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/login")
                 .contentType("application/json")
                 .content(loginPayload));

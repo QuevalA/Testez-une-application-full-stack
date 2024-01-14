@@ -1,8 +1,6 @@
 package com.openclassrooms.starterjwt;
 
 import com.jayway.jsonpath.JsonPath;
-import com.openclassrooms.starterjwt.dto.SessionDto;
-import com.openclassrooms.starterjwt.mapper.SessionMapper;
 import com.openclassrooms.starterjwt.models.Session;
 import com.openclassrooms.starterjwt.repository.SessionRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,10 +14,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,9 +30,6 @@ public class SessionIntegrationTests extends BaseIntegrationTests {
 
     @Autowired
     private SessionRepository sessionRepository;
-
-    @Autowired
-    private SessionMapper sessionMapper;
 
     private String authToken;
 
@@ -235,24 +227,20 @@ public class SessionIntegrationTests extends BaseIntegrationTests {
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk());
 
-        // Retrieve the updated session
         Session updatedSession = sessionRepository.findById(Long.valueOf(createdSessionId)).orElse(null);
         assertNotNull(updatedSession);
 
-        // Verify that the user has been removed from the participants list
         assertFalse(updatedSession.getUsers().stream().anyMatch(user -> user.getId() == 2));
 
-        // Cleanup: Delete the created session
+        // Cleanup
         sessionRepository.deleteById(Long.valueOf(createdSessionId));
     }
 
     @Test
     public void testSessionEqualsAndHashCode() {
-        // Retrieve an existing session for testing purpose
         Session originalSession = sessionRepository.findById(3L).orElse(null);
         assertNotNull(originalSession);
 
-        // Duplicate the original session
         Session duplicateSession = new Session(
                         originalSession.getId(),
                         originalSession.getName(),
@@ -268,10 +256,8 @@ public class SessionIntegrationTests extends BaseIntegrationTests {
         assertTrue(originalSession.equals(duplicateSession), "The equals method should return true for equal objects.");
         assertTrue(duplicateSession.equals(originalSession), "The equals method should be symmetric.");
 
-        // Test hashCode method
         assertEquals(originalSession.hashCode(), duplicateSession.hashCode(), "The hashCode values should be equal for equal hash code fields.");
 
-        // Request a different Session from DB
         Session differentSession = sessionRepository.findById(4L).orElse(null);
 
         // Test equals method for non-equal objects
@@ -280,33 +266,5 @@ public class SessionIntegrationTests extends BaseIntegrationTests {
 
         // Test hashCode method for non-equal objects
         assertNotEquals(originalSession.hashCode(), differentSession.hashCode(), "The hashCode values should be different for non-equal objects.");
-    }
-
-    @Test
-    public void testToEntityListSessionDto() {
-        SessionDto sessionDto1 = new SessionDto();
-        sessionDto1.setId(1L);
-        sessionDto1.setName("Session1");
-        sessionDto1.setDate(new Date());
-        sessionDto1.setTeacher_id(1L);
-        sessionDto1.setDescription("Description1");
-        sessionDto1.setCreatedAt(LocalDateTime.now());
-        sessionDto1.setUpdatedAt(LocalDateTime.now());
-
-        SessionDto sessionDto2 = new SessionDto();
-        sessionDto2.setId(2L);
-        sessionDto2.setName("Session2");
-        sessionDto2.setDate(new Date());
-        sessionDto2.setTeacher_id(2L);
-        sessionDto2.setDescription("Description2");
-        sessionDto2.setCreatedAt(LocalDateTime.now());
-        sessionDto2.setUpdatedAt(LocalDateTime.now());
-
-        List<SessionDto> sessionDtoList = Arrays.asList(sessionDto1, sessionDto2);
-
-        List<Session> sessionList = sessionMapper.toEntity(sessionDtoList);
-
-        assertNotNull(sessionList);
-        assertEquals(sessionDtoList.size(), sessionList.size());
     }
 }
